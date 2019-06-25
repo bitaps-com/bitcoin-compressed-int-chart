@@ -116,7 +116,7 @@ class App:
                                              block_handler=self.new_block_handler,
                                              app_proc_title="bitcoin chart")
             await self.connector.connected
-            self.log.info("Bitcoind connected")
+            self.log.info("Bitcoind connected, start app")
 
         except Exception as err:
             self.log.error("Start failed: %s" % err)
