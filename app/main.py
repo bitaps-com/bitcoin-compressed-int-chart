@@ -147,7 +147,7 @@ class App:
                                                                         self.timeline_size_c_int))
             self.log.info("diff  %s -> %s %%  " % (self.timeline_size_v_int - self.timeline_size_c_int,
                                                    round((self.timeline_size_v_int - self.timeline_size_c_int)
-                                                         / self.timeline_size_v_int * 100, 2))
+                                                         / self.timeline_size_v_int * 100, 2)))
 
 
     async def commit(self):
