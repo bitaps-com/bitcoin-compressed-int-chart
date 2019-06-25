@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+
+    tortuga-server-postgres:
+        build: ./postgres
+        container_name: bitcoin-compressed-int-chart-postgres
+        command: postgres -c config_file=/etc/postgres.conf
+        volumes:
+            - ./data/postgres/:/var/lib/postgresql/data/
+            - ./data/socket/:/var/run/postgresql/
+            - ./config/postgres.conf:/etc/postgres.conf
+
+    tortuga-server:
+        build: ./app
+        container_name: bitcoin-compressed-int-chart
+        volumes:
+          - ./config/:/config/
+          - ./data/socket/:/var/run/postgresql/
+        depends_on:
+            - bitcoin-compressed-int-chart-postgres
+        network_mode: "host"

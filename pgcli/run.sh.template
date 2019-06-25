@@ -1,0 +1,5 @@
+docker build -t bitcoin-compressed-int-chart-pgcli .
+docker run  --rm \
+            --name bitcoin-compressed-int-chart-pgcli \
+            -v /tmp/bitcoin-compressed-int-chart-pgcli:/var/run/postgresql  \
+            -it bitcoin-compressed-int-chart-pgcli postgres://postgres:test@/test
