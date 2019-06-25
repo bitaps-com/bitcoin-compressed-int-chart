@@ -148,6 +148,7 @@ class App:
             self.log.info("diff  %s -> %s %%  " % (self.timeline_size_v_int - self.timeline_size_c_int,
                                                    round((self.timeline_size_v_int - self.timeline_size_c_int)
                                                          / self.timeline_size_v_int * 100, 2)))
+            print(len(self.block_batch))
 
 
     async def commit(self):
