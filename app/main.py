@@ -145,8 +145,9 @@ class App:
             self.log.info("Blockchain blocks %s size %s cint_size %s " % (block["height"],
                                                                         self.timeline_size_v_int,
                                                                         self.timeline_size_c_int))
-            self.log.info("diff  %s -> %s %  " % (self.timeline_size_v_int - self.timeline_size_c_int,
-                                                   round(self.timeline_size_v_int - self.timeline_size_c_int) / self.timeline_size_v_int * 100, 2))
+            self.log.info("diff  %s -> %s %%  " % (self.timeline_size_v_int - self.timeline_size_c_int,
+                                                   round((self.timeline_size_v_int - self.timeline_size_c_int)
+                                                         / self.timeline_size_v_int * 100, 2))
 
 
     async def commit(self):
