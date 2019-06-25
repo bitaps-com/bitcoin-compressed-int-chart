@@ -274,6 +274,7 @@ if __name__ == '__main__':
         logger.critical(str(traceback.format_exc()))
         sys.exit(0)
     connector_log_level = logging.DEBUG
+    log_level = logging.DEBUG
     logger.setLevel(log_level)
     logger_connector.setLevel(connector_log_level)
     loop = asyncio.get_event_loop()
