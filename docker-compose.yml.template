@@ -9,7 +9,6 @@ services:
         volumes:
             - ./data/postgres/:/var/lib/postgresql/data/
             - ./data/socket/:/var/run/postgresql/
-            - ./config/postgres.conf:/etc/postgres.conf
 
     bitcoin-compressed-int-chart:
         build: ./app
