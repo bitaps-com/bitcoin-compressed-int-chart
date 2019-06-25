@@ -5,7 +5,7 @@ services:
     bitcoin-compressed-int-chart-postgres:
         build: ./postgres
         container_name: bitcoin-compressed-int-chart-postgres
-        command: postgres -c config_file=/etc/postgres.conf
+        command: postgres
         volumes:
             - ./data/postgres/:/var/lib/postgresql/data/
             - ./data/socket/:/var/run/postgresql/
