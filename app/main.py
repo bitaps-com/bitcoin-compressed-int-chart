@@ -403,7 +403,6 @@ class App:
 
     async def block_batch_handler(self, block):
         size = block["size"]
-        print(block["height"], size)
         size_c_int = 80 + len(int_to_c_int(len(block["rawTx"])))
 
         for t in block["rawTx"]:
