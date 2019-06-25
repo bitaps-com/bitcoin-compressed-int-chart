@@ -11,9 +11,56 @@ import asyncpg
 import colorlog
 import pybtc
 import db_model
-
+from collections import deque
+from struct import pack
+from pybtc import int_to_c_int, bytes_from_hex, s2rh
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+
+def serialize_cint(self, segwit=True, hex=False):
+
+    chunks = []
+    append = chunks.append
+    append(int_to_c_int(self["version"]))
+    if segwit and self["segwit"]:
+        append(b"\x00\x01")
+    append(int_to_c_int(len(self["vIn"])))
+    for i in self["vIn"]:
+        if isinstance(self["vIn"][i]['txId'], bytes):
+            append(self["vIn"][i]['txId'])
+        else:
+            append(s2rh(self["vIn"][i]['txId']))
+        append(int_to_c_int(self["vIn"][i]['vOut']))
+        if isinstance(self["vIn"][i]['scriptSig'], bytes):
+            append(int_to_c_int(len(self["vIn"][i]['scriptSig'])))
+            append(self["vIn"][i]['scriptSig'])
+        else:
+            append(int_to_c_int(int(len(self["vIn"][i]['scriptSig']) / 2)))
+            append(bytes_from_hex(self["vIn"][i]['scriptSig']))
+        append(int_to_c_int(0xffffffff - self["vIn"][i]['sequence']))
+    append(int_to_c_int(len(self["vOut"])))
+    for i in self["vOut"]:
+        append(int_to_c_int(self["vOut"][i]['value']))
+        if isinstance(self["vOut"][i]['scriptPubKey'], bytes):
+            append(int_to_c_int(len(self["vOut"][i]['scriptPubKey'])))
+            append(self["vOut"][i]['scriptPubKey'])
+        else:
+            append(int_to_c_int(int(len(self["vOut"][i]['scriptPubKey']) / 2)))
+            append(bytes_from_hex(self["vOut"][i]['scriptPubKey']))
+    if segwit and self["segwit"]:
+        for i in self["vIn"]:
+            append(int_to_c_int(len(self["vIn"][i]['txInWitness'])))
+            for w in self["vIn"][i]['txInWitness']:
+                if isinstance(w, bytes):
+                    append(int_to_c_int(len(w)))
+                    append(w)
+                else:
+                    append(int_to_c_int(int(len(w) / 2)))
+                    append(bytes_from_hex(w))
+    append(int_to_c_int(self['lockTime']))
+    tx = b''.join(chunks)
+    return tx if not hex else tx.hex()
 
 
 class App:
@@ -30,7 +77,9 @@ class App:
         self.db_pool = None
         self.rpc = None
         self.connector = None
-
+        self.timeline_size_c_int = 0
+        self.timeline_size_v_int = 0
+        self.block_batch = deque()
         self.start_block = 0
         self.total_tx = 0
         self.processes = []
@@ -52,6 +101,7 @@ class App:
                 async with conn.transaction():
                     await db_model.create_db_model(self, conn)
             self.log.info("Connecting to bitcoind daemon ...")
+            self.tasks.append(self.loop.create_task(self.commit()))
 
             self.connector = pybtc.Connector(config["CONNECTOR"]["rpc"],
                                              config["CONNECTOR"]["zeromq"],
@@ -77,7 +127,44 @@ class App:
 
 
     async def block_batch_handler(self, block):
-        pass
+        size = block["size"]
+        size_c_int = 80 + len(int_to_c_int(len(block["rawTx"])))
+
+        for t in block["rawTx"]:
+            size_c_int += len(serialize_cint(block["rawTx"][t], hex=False))
+
+        self.timeline_size_c_int += size_c_int
+        self.timeline_size_v_int += size
+        self.block_batch.append((block["height"],
+                                 int(time.time()),
+                                 size,
+                                 self.timeline_size_v_int,
+                                 size_c_int,
+                                 self.timeline_size_c_int))
+        if block["height"] % 10000 == 0:
+            self.log.info("Blockchain blocks %s size %s cint_size %s " % (block["height"],
+                                                                        self.timeline_size_v_int,
+                                                                        self.timeline_size_c_int))
+
+
+    async def commit(self):
+        batch = None
+        while True:
+            if batch is None:
+                batch = deque(self.block_batch)
+                self.block_batch = deque()
+            if batch:
+                async with self.db_pool.acquire() as conn:
+                    async with conn.transaction():
+
+                        await conn.copy_records_to_table('blocks',
+                                                         columns=["height", "timestamp",
+                                                                  "size_c_int", "timeline_size_c_int",
+                                                                  "size_v_int", "timeline_size_v_int"],
+                                                         records=batch)
+            else:
+                await asyncio.sleep(1)
+            batch = None
 
 
 
