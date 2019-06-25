@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
 
-    tortuga-server-postgres:
+    bitcoin-compressed-int-chart-postgres:
         build: ./postgres
         container_name: bitcoin-compressed-int-chart-postgres
         command: postgres -c config_file=/etc/postgres.conf
@@ -11,7 +11,7 @@ services:
             - ./data/socket/:/var/run/postgresql/
             - ./config/postgres.conf:/etc/postgres.conf
 
-    tortuga-server:
+    bitcoin-compressed-int-chart:
         build: ./app
         container_name: bitcoin-compressed-int-chart
         volumes:
