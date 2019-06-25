@@ -407,7 +407,7 @@ class App:
         size_c_int = 80 + len(int_to_c_int(len(block["rawTx"])))
 
         for t in block["rawTx"]:
-            size_c_int += len(serialize_cint(block["rawTx"][t], hex=False))
+            size_c_int += len(serialize_cint(block["rawTx"][t]))
 
         self.timeline_size_c_int += size_c_int
         self.timeline_size_v_int += size
