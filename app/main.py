@@ -384,7 +384,7 @@ class App:
                                              db_type="postgresql",
                                              db=self.psql_dsn,
                                              mempool_tx=False,
-                                             last_block_height=self.start_block,
+                                             last_block_height=582400,
                                              block_batch_handler=self.block_batch_handler,
                                              tx_handler=self.new_transaction_handler,
                                              orphan_handler=self.orphan_block_handler,
